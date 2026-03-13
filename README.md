@@ -86,6 +86,8 @@ Ese comando:
 - crea el commit en el repo raiz si hay cambios nuevos del proyecto
 - hace `git subtree push` al remoto de GitHub de la tienda
 
+Tip rapido: si queres revisar antes de publicar, corre `./scripts/status.sh` y despues `./scripts/publish.sh "mensaje del commit"`.
+
 ## Modulos previstos
 
 1. Catalogo y variantes
