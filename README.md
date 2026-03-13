@@ -64,6 +64,28 @@ Credenciales admin seed por defecto:
 
 Conviene cambiarlas en `./.env` antes de produccion y volver a correr `npm run prisma:seed`.
 
+## Publicacion en GitHub
+
+Este proyecto se publica desde el repo raiz `Antigravity`, pero el remoto de GitHub recibe solo `Tiendaonlinealmamater` via subtree.
+
+Revision rapida del estado local:
+
+```bash
+./scripts/status.sh
+```
+
+Publicar avances al repo `nachopueyrredon-afk/tiendaonlinealmamater`:
+
+```bash
+./scripts/publish.sh "mensaje del commit"
+```
+
+Ese comando:
+
+- stagea solo `Tiendaonlinealmamater`
+- crea el commit en el repo raiz si hay cambios nuevos del proyecto
+- hace `git subtree push` al remoto de GitHub de la tienda
+
 ## Modulos previstos
 
 1. Catalogo y variantes
