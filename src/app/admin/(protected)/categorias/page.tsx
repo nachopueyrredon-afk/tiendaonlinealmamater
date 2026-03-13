@@ -1,12 +1,14 @@
 import { createCategoryAction, updateCategoryAction } from "@/app/admin/(protected)/productos/actions";
 import { ActionFeedback } from "@/components/admin/action-feedback";
 import { getAdminCategories } from "@/lib/admin";
+import { requireAdminPermission } from "@/lib/admin-session";
 
 export default async function AdminCategoriesPage({
   searchParams,
 }: {
   searchParams: Promise<{ feedback?: string }>;
 }) {
+  await requireAdminPermission("taxonomy.manage");
   const params = await searchParams;
   const categories = await getAdminCategories();
 

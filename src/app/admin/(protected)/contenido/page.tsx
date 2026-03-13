@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ActionFeedback } from "@/components/admin/action-feedback";
 import { ConfirmSubmitButton } from "@/components/admin/confirm-submit-button";
 import { getAdminHomeBlocks } from "@/lib/admin";
+import { requireAdminPermission } from "@/lib/admin-session";
 import { getSitePages } from "@/lib/site-pages";
 
 import { toggleHomeBlockActiveAction } from "./home/actions";
@@ -12,6 +13,7 @@ export default async function AdminContentPage({
 }: {
   searchParams: Promise<{ feedback?: string }>;
 }) {
+  await requireAdminPermission("content.manage");
   const params = await searchParams;
   const [pages, blocks] = await Promise.all([getSitePages(), getAdminHomeBlocks()]);
   const activeBlocks = blocks.filter((block) => block.isActive).length;

@@ -1,5 +1,6 @@
 import { getAdminOrders } from "@/lib/admin";
 import { ActionFeedback } from "@/components/admin/action-feedback";
+import { requireAdminPermission } from "@/lib/admin-session";
 import { formatCurrency } from "@/lib/utils";
 import { updateOrderAction } from "@/app/admin/productos/actions";
 
@@ -13,6 +14,7 @@ type AdminOrdersPageProps = {
 };
 
 export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageProps) {
+  await requireAdminPermission("orders.manage");
   const params = await searchParams;
   const orders = await getAdminOrders();
   const query = (params.q ?? "").trim().toLowerCase();

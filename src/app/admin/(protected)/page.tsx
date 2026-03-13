@@ -1,15 +1,17 @@
 import Link from "next/link";
 
+import { ActionFeedback } from "@/components/admin/action-feedback";
+import { hasAdminPermission, type AdminPermission } from "@/lib/admin-permissions";
+import { requireAdminSession } from "@/lib/admin-session";
 import { getAdminDashboardStats } from "@/lib/admin";
 
 const modules = [
-  { title: "Productos y variantes", href: "/admin/productos", note: "Catalogo, precios, stock y estructura comercial." },
-  { title: "Colecciones, materiales y advocaciones", href: "/admin/categorias", note: "Taxonomias para ordenar navegacion y lectura del objeto." },
-  { title: "Pedidos, pagos y envios", href: "/admin/pedidos", note: "Seguimiento operativo de la compra y sus estados." },
-  { title: "Bloques editables del home", href: "/admin/contenido", note: "Narrativa de marca, bandas editoriales y mensajes clave." },
-  { title: "Clientes y exportaciones", href: "/admin/pedidos", note: "Base inicial para consultas, segmentacion y trazabilidad." },
-  { title: "SEO basico y publicaciones", href: "/admin/contenido", note: "Contenido institucional y mantenimiento de presencia organica." },
-];
+  { title: "Productos y variantes", href: "/admin/productos", note: "Catalogo, precios, stock y estructura comercial.", permission: "products.manage" },
+  { title: "Colecciones, materiales y advocaciones", href: "/admin/categorias", note: "Taxonomias para ordenar navegacion y lectura del objeto.", permission: "taxonomy.manage" },
+  { title: "Pedidos, pagos y envios", href: "/admin/pedidos", note: "Seguimiento operativo de la compra y sus estados.", permission: "orders.manage" },
+  { title: "Bloques editables del home", href: "/admin/contenido", note: "Narrativa de marca, bandas editoriales y mensajes clave.", permission: "content.manage" },
+  { title: "Usuarios y perfiles", href: "/admin/usuarios", note: "Altas, perfiles y estados de acceso del backoffice.", permission: "users.manage" },
+] as const satisfies Array<{ title: string; href: string; note: string; permission: AdminPermission }>;
 
 const quickChecks = [
   "Revisar stock critico y variantes activas.",
@@ -17,8 +19,11 @@ const quickChecks = [
   "Actualizar bloques del home segun foco comercial.",
 ];
 
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ feedback?: string }> }) {
+  const session = await requireAdminSession();
+  const params = await searchParams;
   const stats = await getAdminDashboardStats();
+  const visibleModules = modules.filter((module) => hasAdminPermission(session.role, module.permission));
 
   return (
     <section className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
@@ -41,6 +46,7 @@ export default async function AdminPage() {
           </div>
         </div>
       </div>
+      <ActionFeedback feedback={params.feedback} />
       <div className="mt-8 grid gap-4 md:grid-cols-3">
         <div className="rounded-[1.5rem] border border-brand-900/10 bg-paper p-6 shadow-soft">
           <p className="text-xs uppercase tracking-[0.22em] text-brand-700">Productos</p>
@@ -57,9 +63,16 @@ export default async function AdminPage() {
           <p className="mt-3 font-serif text-4xl text-brand-900">{stats.customerCount}</p>
           <p className="mt-2 text-sm text-brand-900/64">Base inicial de compradores y contactos asociados a pedidos.</p>
         </div>
+        {hasAdminPermission(session.role, "users.manage") ? (
+          <div className="rounded-[1.5rem] border border-brand-900/10 bg-paper p-6 shadow-soft">
+            <p className="text-xs uppercase tracking-[0.22em] text-brand-700">Usuarios admin</p>
+            <p className="mt-3 font-serif text-4xl text-brand-900">{stats.adminUserCount}</p>
+            <p className="mt-2 text-sm text-brand-900/64">Cuentas activas con acceso al backoffice.</p>
+          </div>
+        ) : null}
       </div>
       <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {modules.map((module) => (
+        {visibleModules.map((module) => (
           <Link key={module.title} href={module.href} className="rounded-[1.7rem] border border-brand-900/10 bg-paper p-6 shadow-soft transition hover:-translate-y-0.5 hover:border-brand-900/20 hover:shadow-[0_24px_60px_rgba(16,28,48,0.1)]">
             <p className="text-sm uppercase tracking-[0.24em] text-brand-700">Modulo</p>
             <h2 className="mt-3 font-serif text-2xl text-brand-900">{module.title}</h2>

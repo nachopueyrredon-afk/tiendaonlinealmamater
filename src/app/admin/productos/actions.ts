@@ -7,6 +7,7 @@ import { OrderStatus, PaymentStatus, ProductLine, ProductStatus, ShipmentStatus 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { requireAdminPermission } from "@/lib/admin-session";
 import { prisma } from "@/lib/prisma";
 
 function buildRedirectPath(pathname: string, feedback: string) {
@@ -100,6 +101,7 @@ async function parseUploadedImages(formData: FormData) {
 }
 
 export async function saveProductAction(formData: FormData) {
+  await requireAdminPermission("products.manage");
   const productId = String(formData.get("productId") || "");
   const name = String(formData.get("name") || "").trim();
   const description = String(formData.get("description") || "").trim();
@@ -170,6 +172,7 @@ export async function saveProductAction(formData: FormData) {
 }
 
 export async function setProductStatusAction(formData: FormData) {
+  await requireAdminPermission("products.manage");
   const productId = String(formData.get("productId") || "");
   const status = String(formData.get("status") || "DRAFT") as ProductStatus;
 
@@ -188,6 +191,7 @@ export async function setProductStatusAction(formData: FormData) {
 }
 
 export async function duplicateProductAction(formData: FormData) {
+  await requireAdminPermission("products.manage");
   const productId = String(formData.get("productId") || "");
 
   if (!productId) {
@@ -285,6 +289,7 @@ export async function duplicateProductAction(formData: FormData) {
 }
 
 export async function updateOrderAction(formData: FormData) {
+  await requireAdminPermission("orders.manage");
   const orderId = String(formData.get("orderId") || "");
   const status = String(formData.get("status") || "PENDING");
   const paymentStatus = String(formData.get("paymentStatus") || "PENDING");
@@ -317,6 +322,7 @@ export async function updateOrderAction(formData: FormData) {
 }
 
 export async function createCategoryAction(formData: FormData) {
+  await requireAdminPermission("taxonomy.manage");
   const name = String(formData.get("name") || "").trim();
   const description = String(formData.get("description") || "").trim() || null;
 
@@ -338,6 +344,7 @@ export async function createCategoryAction(formData: FormData) {
 }
 
 export async function updateCategoryAction(formData: FormData) {
+  await requireAdminPermission("taxonomy.manage");
   const categoryId = String(formData.get("categoryId") || "");
   const name = String(formData.get("name") || "").trim();
   const description = String(formData.get("description") || "").trim() || null;

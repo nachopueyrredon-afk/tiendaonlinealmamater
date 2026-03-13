@@ -1,4 +1,4 @@
-import { PrismaClient, ProductLine, ProductStatus, ShippingCarrier, PaymentMethod, PaymentStatus, ShipmentStatus, OrderStatus, DiscountType, InventoryPolicy, HomeBlockType } from "@prisma/client";
+import { AdminRole, PrismaClient, ProductLine, ProductStatus, ShippingCarrier, PaymentMethod, PaymentStatus, ShipmentStatus, OrderStatus, DiscountType, InventoryPolicy, HomeBlockType } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 import { getSeedAdminPassword } from "../src/lib/security-env";
@@ -15,6 +15,8 @@ async function main() {
       email: process.env.ADMIN_EMAIL || "admin@almamater.com",
       name: "ALMA MATER Admin",
       passwordHash,
+      role: AdminRole.SUPER_ADMIN,
+      isActive: true,
     },
   });
 

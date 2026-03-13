@@ -2,9 +2,11 @@ import Link from "next/link";
 
 import { ConfirmSubmitButton } from "@/components/admin/confirm-submit-button";
 import { ActionFeedback } from "@/components/admin/action-feedback";
-import { duplicateProductAction, setProductStatusAction } from "./actions";
 import { getAdminProducts } from "@/lib/admin";
+import { requireAdminPermission } from "@/lib/admin-session";
 import { formatCurrency } from "@/lib/utils";
+
+import { duplicateProductAction, setProductStatusAction } from "./actions";
 
 type AdminProductsPageProps = {
   searchParams: Promise<{
@@ -16,6 +18,7 @@ type AdminProductsPageProps = {
 };
 
 export default async function AdminProductsPage({ searchParams }: AdminProductsPageProps) {
+  await requireAdminPermission("products.manage");
   const params = await searchParams;
   const products = await getAdminProducts();
   const query = (params.q ?? "").trim().toLowerCase();

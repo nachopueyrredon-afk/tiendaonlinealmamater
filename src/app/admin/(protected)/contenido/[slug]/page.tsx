@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { requireAdminPermission } from "@/lib/admin-session";
 import { getSitePageBySlug } from "@/lib/site-pages";
 
 import { saveSitePageAction } from "../actions";
 
 export default async function AdminContentEditPage({ params }: { params: Promise<{ slug: string }> }) {
+  await requireAdminPermission("content.manage");
   const { slug } = await params;
   const page = await getSitePageBySlug(slug);
 

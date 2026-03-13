@@ -3,9 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { requireAdminPermission } from "@/lib/admin-session";
 import { prisma } from "@/lib/prisma";
 
 export async function saveSitePageAction(formData: FormData) {
+  await requireAdminPermission("content.manage");
   const id = String(formData.get("id") || "");
   const slug = String(formData.get("slug") || "");
   const title = String(formData.get("title") || "").trim();

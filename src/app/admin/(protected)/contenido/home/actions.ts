@@ -3,9 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { requireAdminPermission } from "@/lib/admin-session";
 import { prisma } from "@/lib/prisma";
 
 export async function saveHomeBlockAction(formData: FormData) {
+  await requireAdminPermission("content.manage");
   const id = String(formData.get("id") || "");
   const title = String(formData.get("title") || "").trim() || null;
   const subtitle = String(formData.get("subtitle") || "").trim() || null;
@@ -31,6 +33,7 @@ export async function saveHomeBlockAction(formData: FormData) {
 }
 
 export async function toggleHomeBlockActiveAction(formData: FormData) {
+  await requireAdminPermission("content.manage");
   const id = String(formData.get("id") || "");
   const isActive = String(formData.get("isActive") || "") === "true";
 

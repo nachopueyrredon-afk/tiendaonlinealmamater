@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { requireAdminPermission } from "@/lib/admin-session";
 import { getAdminHomeBlockById } from "@/lib/admin";
 
 import { saveHomeBlockAction } from "../actions";
 
 export default async function AdminHomeBlockEditPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdminPermission("content.manage");
   const { id } = await params;
   const block = await getAdminHomeBlockById(id);
 

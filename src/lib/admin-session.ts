@@ -1,9 +1,11 @@
 import crypto from "node:crypto";
 
 import bcrypt from "bcryptjs";
+import type { AdminRole } from "@prisma/client";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { hasAdminPermission, type AdminPermission } from "@/lib/admin-permissions";
 import { prisma } from "@/lib/prisma";
 import { getAdminSessionSecret } from "@/lib/security-env";
 
@@ -44,10 +46,10 @@ export async function getAdminSession() {
 
   const admin = await prisma.adminUser.findUnique({
     where: { id: parsed.adminId },
-    select: { id: true, email: true, name: true, role: true },
+    select: { id: true, email: true, name: true, role: true, isActive: true },
   });
 
-  if (!admin || admin.email !== parsed.email) {
+  if (!admin || !admin.isActive || admin.email !== parsed.email) {
     return null;
   }
 
@@ -62,10 +64,24 @@ export async function requireAdminSession() {
   return session;
 }
 
+export async function requireAdminPermission(permission: AdminPermission) {
+  const session = await requireAdminSession();
+
+  if (!hasAdminPermission(session.role as AdminRole, permission)) {
+    redirect("/admin?feedback=forbidden");
+  }
+
+  return session;
+}
+
 export async function createAdminSession(email: string, password: string) {
   const admin = await prisma.adminUser.findUnique({ where: { email } });
   if (!admin) {
     return { ok: false as const, error: "Credenciales invalidas." };
+  }
+
+  if (!admin.isActive) {
+    return { ok: false as const, error: "Tu acceso admin esta desactivado." };
   }
 
   const valid = await bcrypt.compare(password, admin.passwordHash);
