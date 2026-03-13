@@ -19,6 +19,38 @@ function slugify(value: string) {
     .replace(/-+/g, "-");
 }
 
+async function ensureUniqueProductField(field: "slug" | "sku", value: string, excludeProductId?: string) {
+  let candidate = value;
+  let attempt = 1;
+
+  while (true) {
+    const product = await prisma.product.findFirst({
+      where: {
+        [field]: candidate,
+        ...(excludeProductId ? { id: { not: excludeProductId } } : {}),
+      },
+      select: { id: true },
+    });
+
+    if (!product) {
+      return candidate;
+    }
+
+    attempt += 1;
+    candidate = field === "slug" ? `${value}-${attempt}` : `${value}-${attempt}`;
+  }
+}
+
+function revalidateProductPaths(slug?: string) {
+  revalidatePath("/admin");
+  revalidatePath("/admin/productos");
+  revalidatePath("/catalogo");
+
+  if (slug) {
+    revalidatePath(`/producto/${slug}`);
+  }
+}
+
 function parseImageLines(raw: string) {
   return raw
     .split("\n")
@@ -73,7 +105,7 @@ export async function saveProductAction(formData: FormData) {
     throw new Error("Nombre, descripcion y SKU son obligatorios.");
   }
 
-  const slug = String(formData.get("slug") || "").trim() || slugify(name);
+  const baseSlug = String(formData.get("slug") || "").trim() || slugify(name);
   const line = String(formData.get("line") || "RESINA_EPOXI") as ProductLine;
   const status = String(formData.get("status") || "DRAFT") as ProductStatus;
   const regularPrice = Number(formData.get("regularPrice") || 0);
@@ -87,6 +119,8 @@ export async function saveProductAction(formData: FormData) {
   const images = parseImageLines(String(formData.get("images") || ""));
   const uploadedImages = await parseUploadedImages(formData);
   const isFeatured = String(formData.get("isFeatured") || "") === "on";
+  const slug = await ensureUniqueProductField("slug", baseSlug, productId || undefined);
+  const uniqueSku = await ensureUniqueProductField("sku", sku, productId || undefined);
 
   const data = {
     name,
@@ -95,7 +129,7 @@ export async function saveProductAction(formData: FormData) {
     description,
     line,
     status,
-    sku,
+    sku: uniqueSku,
     regularPrice,
     transferPrice,
     installmentsText,
@@ -125,11 +159,103 @@ export async function saveProductAction(formData: FormData) {
     });
   }
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/productos");
-  revalidatePath(`/producto/${product.slug}`);
-  revalidatePath("/catalogo");
+  revalidateProductPaths(product.slug);
   redirect("/admin/productos");
+}
+
+export async function setProductStatusAction(formData: FormData) {
+  const productId = String(formData.get("productId") || "");
+  const status = String(formData.get("status") || "DRAFT") as ProductStatus;
+
+  if (!productId) {
+    throw new Error("Falta el producto a actualizar.");
+  }
+
+  const product = await prisma.product.update({
+    where: { id: productId },
+    data: { status },
+    select: { slug: true },
+  });
+
+  revalidateProductPaths(product.slug);
+  redirect("/admin/productos");
+}
+
+export async function duplicateProductAction(formData: FormData) {
+  const productId = String(formData.get("productId") || "");
+
+  if (!productId) {
+    throw new Error("Falta el producto a duplicar.");
+  }
+
+  const source = await prisma.product.findUnique({
+    where: { id: productId },
+    include: {
+      categories: true,
+      images: { orderBy: { sortOrder: "asc" } },
+      variants: { orderBy: { sortOrder: "asc" } },
+    },
+  });
+
+  if (!source) {
+    throw new Error("No se encontro el producto a duplicar.");
+  }
+
+  const duplicateSlug = await ensureUniqueProductField("slug", `${source.slug}-copia`);
+  const duplicateSku = await ensureUniqueProductField("sku", `${source.sku}-COPY`);
+
+  const duplicated = await prisma.product.create({
+    data: {
+      name: `${source.name} copia`,
+      slug: duplicateSlug,
+      subtitle: source.subtitle,
+      description: source.description,
+      line: source.line,
+      status: ProductStatus.DRAFT,
+      sku: duplicateSku,
+      regularPrice: source.regularPrice,
+      transferPrice: source.transferPrice,
+      compareAtPrice: source.compareAtPrice,
+      installmentsText: source.installmentsText,
+      dimensions: source.dimensions,
+      weightGrams: source.weightGrams,
+      careInstructions: source.careInstructions,
+      seoTitle: source.seoTitle,
+      seoDescription: source.seoDescription,
+      isFeatured: false,
+      inventoryPolicy: source.inventoryPolicy,
+      categories: {
+        create: source.categories.map((entry) => ({ categoryId: entry.categoryId })),
+      },
+      images: {
+        create: source.images.map((image) => ({
+          url: image.url,
+          alt: image.alt,
+          sortOrder: image.sortOrder,
+          isPrimary: image.isPrimary,
+        })),
+      },
+      variants: {
+        create: source.variants.map((variant, index) => ({
+          name: variant.name,
+          sku: `${duplicateSku}-V${index + 1}`,
+          materialId: variant.materialId,
+          devotionId: variant.devotionId,
+          sizeLabel: variant.sizeLabel,
+          finishLabel: variant.finishLabel,
+          regularPrice: variant.regularPrice,
+          transferPrice: variant.transferPrice,
+          stock: variant.stock,
+          sortOrder: variant.sortOrder,
+          isDefault: variant.isDefault,
+        })),
+      },
+    },
+    select: { id: true, slug: true },
+  });
+
+  revalidateProductPaths(duplicated.slug);
+  redirect(`/admin/productos/${duplicated.id}`);
 }
 
 export async function updateOrderAction(formData: FormData) {
@@ -181,5 +307,6 @@ export async function createCategoryAction(formData: FormData) {
   });
 
   revalidatePath("/admin/productos");
-  redirect("/admin/productos");
+  revalidatePath("/admin/categorias");
+  redirect("/admin/categorias");
 }

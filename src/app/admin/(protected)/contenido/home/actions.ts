@@ -29,3 +29,21 @@ export async function saveHomeBlockAction(formData: FormData) {
   revalidatePath("/admin/contenido");
   redirect("/admin/contenido");
 }
+
+export async function toggleHomeBlockActiveAction(formData: FormData) {
+  const id = String(formData.get("id") || "");
+  const isActive = String(formData.get("isActive") || "") === "true";
+
+  if (!id) {
+    throw new Error("Falta el bloque a actualizar.");
+  }
+
+  await prisma.homeBlock.update({
+    where: { id },
+    data: { isActive },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/contenido");
+  redirect("/admin/contenido");
+}

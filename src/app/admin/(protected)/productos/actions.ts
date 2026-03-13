@@ -1,1 +1,1 @@
-export { createCategoryAction, saveProductAction } from "@/app/admin/productos/actions";
+export { createCategoryAction, duplicateProductAction, saveProductAction, setProductStatusAction } from "@/app/admin/productos/actions";
