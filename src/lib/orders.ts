@@ -149,6 +149,19 @@ export async function createOrderFromCheckout(input: z.infer<typeof checkoutSche
       });
     }
 
+    for (const item of cartItems) {
+      if (item.variantId) continue;
+
+      if (item.availableStock < item.quantity) {
+        throw new Error(`Stock insuficiente para ${item.productName}`);
+      }
+
+      await tx.product.update({
+        where: { id: item.productId },
+        data: { baseStock: { decrement: item.quantity } },
+      });
+    }
+
     return order;
   }, {
     maxWait: 20000,

@@ -27,7 +27,7 @@ export async function saveHomeBlockAction(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath("/admin/contenido");
-  redirect("/admin/contenido");
+  redirect("/admin/contenido?feedback=home-block-saved");
 }
 
 export async function toggleHomeBlockActiveAction(formData: FormData) {
@@ -45,5 +45,5 @@ export async function toggleHomeBlockActiveAction(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath("/admin/contenido");
-  redirect("/admin/contenido");
+  redirect("/admin/contenido?feedback=home-block-toggled");
 }

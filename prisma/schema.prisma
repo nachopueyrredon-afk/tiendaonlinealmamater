@@ -162,6 +162,7 @@ model Product {
   regularPrice     Int
   transferPrice    Int
   compareAtPrice   Int?
+  baseStock        Int                  @default(0)
   installmentsText String?
   dimensions       String?
   weightGrams      Int?

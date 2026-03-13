@@ -1,11 +1,18 @@
 import Link from "next/link";
 
+import { ActionFeedback } from "@/components/admin/action-feedback";
+import { ConfirmSubmitButton } from "@/components/admin/confirm-submit-button";
 import { getAdminHomeBlocks } from "@/lib/admin";
 import { getSitePages } from "@/lib/site-pages";
 
 import { toggleHomeBlockActiveAction } from "./home/actions";
 
-export default async function AdminContentPage() {
+export default async function AdminContentPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ feedback?: string }>;
+}) {
+  const params = await searchParams;
   const [pages, blocks] = await Promise.all([getSitePages(), getAdminHomeBlocks()]);
   const activeBlocks = blocks.filter((block) => block.isActive).length;
 
@@ -13,6 +20,7 @@ export default async function AdminContentPage() {
     <section className="mx-auto max-w-7xl px-6 py-14 lg:px-8">
       <p className="text-xs uppercase tracking-[0.32em] text-brand-700">Admin / Contenido</p>
       <h1 className="mt-4 font-serif text-5xl text-brand-900">CMS liviano para operar sin tocar codigo</h1>
+      <ActionFeedback feedback={params.feedback} />
       <div className="mt-8 grid gap-4 md:grid-cols-3">
         <MetricCard label="Bloques home" value={String(blocks.length)} description="Componentes editables del inicio." />
         <MetricCard label="Activos" value={String(activeBlocks)} description="Bloques actualmente visibles en home." />
@@ -37,9 +45,16 @@ export default async function AdminContentPage() {
                 <form action={toggleHomeBlockActiveAction}>
                   <input type="hidden" name="id" value={block.id} />
                   <input type="hidden" name="isActive" value={block.isActive ? "false" : "true"} />
-                  <button type="submit" className={block.isActive ? "text-amber-700" : "text-green-700"}>
+                  <ConfirmSubmitButton
+                    className={block.isActive ? "text-amber-700" : "text-green-700"}
+                    message={
+                      block.isActive
+                        ? `Vas a desactivar el bloque \"${block.title || block.key}\" del home.`
+                        : `Vas a activar el bloque \"${block.title || block.key}\" en el home.`
+                    }
+                  >
                     {block.isActive ? "Desactivar" : "Activar"}
-                  </button>
+                  </ConfirmSubmitButton>
                 </form>
                 <Link href="/" className="text-brand-900/70">Ver home</Link>
               </div>

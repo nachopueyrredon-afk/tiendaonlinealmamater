@@ -1,10 +1,12 @@
 import { PrismaClient, ProductLine, ProductStatus, ShippingCarrier, PaymentMethod, PaymentStatus, ShipmentStatus, OrderStatus, DiscountType, InventoryPolicy, HomeBlockType } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
+import { getSeedAdminPassword } from "../src/lib/security-env";
+
 const prisma = new PrismaClient();
 
 async function main() {
-  const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD || "change-me", 10);
+  const passwordHash = await bcrypt.hash(getSeedAdminPassword(), 10);
 
   await prisma.adminUser.upsert({
     where: { email: process.env.ADMIN_EMAIL || "admin@almamater.com" },
@@ -37,6 +39,7 @@ async function main() {
       sku: "AM-IMG-001",
       regularPrice: 185000,
       transferPrice: 166500,
+      baseStock: 6,
       installmentsText: "Hasta 6 cuotas sin interes segun promocion vigente.",
       dimensions: "28 x 12 x 10 cm",
       weightGrams: 1300,
@@ -54,6 +57,7 @@ async function main() {
       sku: "AM-IMG-002",
       regularPrice: 209000,
       transferPrice: 188100,
+      baseStock: 4,
       installmentsText: "Hasta 6 cuotas sin interes segun promocion vigente.",
       dimensions: "30 x 14 x 12 cm",
       weightGrams: 1450,
@@ -71,6 +75,7 @@ async function main() {
       sku: "AM-IMG-003",
       regularPrice: 178000,
       transferPrice: 160200,
+      baseStock: 5,
       installmentsText: "Hasta 6 cuotas sin interes segun promocion vigente.",
       dimensions: "26 x 11 x 9 cm",
       weightGrams: 1180,
@@ -88,6 +93,7 @@ async function main() {
       sku: "AM-JOY-001",
       regularPrice: 92000,
       transferPrice: 82800,
+      baseStock: 0,
       installmentsText: "Hasta 3 cuotas sin interes con Mercado Pago.",
       dimensions: "2.2 x 1.6 cm",
       weightGrams: 12,
@@ -110,6 +116,7 @@ async function main() {
       sku: "AM-JOY-002",
       regularPrice: 98000,
       transferPrice: 88200,
+      baseStock: 0,
       installmentsText: "Hasta 3 cuotas sin interes con Mercado Pago.",
       dimensions: "2.5 x 2.5 cm",
       weightGrams: 15,

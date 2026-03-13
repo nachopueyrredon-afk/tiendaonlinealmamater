@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { ConfirmSubmitButton } from "@/components/admin/confirm-submit-button";
+import { ActionFeedback } from "@/components/admin/action-feedback";
 import { duplicateProductAction, setProductStatusAction } from "./actions";
 import { getAdminProducts } from "@/lib/admin";
 import { formatCurrency } from "@/lib/utils";
@@ -9,6 +11,7 @@ type AdminProductsPageProps = {
     q?: string;
     status?: string;
     line?: string;
+    feedback?: string;
   }>;
 };
 
@@ -48,6 +51,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
           <Link href="/admin" className="text-sm text-brand-700">Volver al panel</Link>
         </div>
       </div>
+      <ActionFeedback feedback={params.feedback} />
       <div className="mt-8 grid gap-4 md:grid-cols-3">
         <MetricCard label="Publicados" value={publishedCount.toString()} description="Productos visibles en storefront." />
         <MetricCard label="Borradores" value={draftCount.toString()} description="Piezas pendientes de revision o carga final." />
@@ -121,7 +125,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
           </thead>
           <tbody>
             {filteredProducts.map((product) => {
-              const stock = product.variants.length === 0 ? 1 : product.variants.reduce((acc, variant) => acc + variant.stock, 0);
+              const stock = product.variants.length === 0 ? product.baseStock : product.variants.reduce((acc, variant) => acc + variant.stock, 0);
               const statusTone = product.status === "PUBLISHED" ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700";
 
               return (
@@ -153,31 +157,31 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
                            </button>
                          </form>
                        ) : null}
-                       {product.status !== "ARCHIVED" ? (
-                         <form action={setProductStatusAction}>
-                           <input type="hidden" name="productId" value={product.id} />
-                           <input type="hidden" name="status" value="ARCHIVED" />
-                           <button type="submit" className="text-amber-700">
-                             Archivar
-                           </button>
-                         </form>
-                       ) : (
-                         <form action={setProductStatusAction}>
-                           <input type="hidden" name="productId" value={product.id} />
-                           <input type="hidden" name="status" value="DRAFT" />
+                        {product.status !== "ARCHIVED" ? (
+                          <form action={setProductStatusAction}>
+                            <input type="hidden" name="productId" value={product.id} />
+                            <input type="hidden" name="status" value="ARCHIVED" />
+                            <ConfirmSubmitButton className="text-amber-700" message={`Vas a archivar \"${product.name}\". Podras volver a borrador despues.`}>
+                              Archivar
+                            </ConfirmSubmitButton>
+                          </form>
+                        ) : (
+                          <form action={setProductStatusAction}>
+                            <input type="hidden" name="productId" value={product.id} />
+                            <input type="hidden" name="status" value="DRAFT" />
                            <button type="submit" className="text-brand-700">
                              Pasar a borrador
                            </button>
                          </form>
-                       )}
-                       <form action={duplicateProductAction}>
-                         <input type="hidden" name="productId" value={product.id} />
-                         <button type="submit" className="text-brand-900/72">
-                           Duplicar
-                         </button>
-                       </form>
-                     </div>
-                   </td>
+                        )}
+                        <form action={duplicateProductAction}>
+                          <input type="hidden" name="productId" value={product.id} />
+                          <ConfirmSubmitButton className="text-brand-900/72" message={`Se creara una copia en borrador de \"${product.name}\" con imagenes y variantes.`}>
+                            Duplicar
+                          </ConfirmSubmitButton>
+                        </form>
+                      </div>
+                    </td>
                  </tr>
                );
              })}

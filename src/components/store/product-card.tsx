@@ -6,7 +6,7 @@ import type { StoreProduct } from "@/types/store";
 
 export function ProductCard({ product }: { product: StoreProduct }) {
   const savings = product.regularPrice - product.transferPrice;
-  const stock = product.variants.length === 0 ? 1 : product.variants.reduce((acc, item) => acc + item.stock, 0);
+  const stock = product.stock;
   const visualTags = (product.tags ?? []).slice(0, 2);
 
   return (

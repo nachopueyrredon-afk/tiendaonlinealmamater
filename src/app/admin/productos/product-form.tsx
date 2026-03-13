@@ -18,6 +18,7 @@ type ProductData = {
   sku: string;
   regularPrice: number;
   transferPrice: number;
+  baseStock: number;
   installmentsText: string | null;
   dimensions: string | null;
   weightGrams: number | null;
@@ -46,6 +47,7 @@ export function ProductForm({ product, categories }: { product?: ProductData | n
           <Select name="status" label="Estado" defaultValue={product?.status ?? ProductStatus.DRAFT} options={[ProductStatus.DRAFT, ProductStatus.PUBLISHED, ProductStatus.ARCHIVED]} />
           <Field name="regularPrice" label="Precio regular" type="number" defaultValue={product?.regularPrice?.toString() ?? "0"} />
           <Field name="transferPrice" label="Precio transferencia" type="number" defaultValue={product?.transferPrice?.toString() ?? "0"} />
+          <Field name="baseStock" label="Stock base" type="number" defaultValue={product?.baseStock?.toString() ?? "0"} />
           <Field name="installmentsText" label="Cuotas" defaultValue={product?.installmentsText ?? ""} className="sm:col-span-2" />
           <Field name="dimensions" label="Dimensiones" defaultValue={product?.dimensions ?? ""} />
           <Field name="weightGrams" label="Peso en gramos" type="number" defaultValue={product?.weightGrams?.toString() ?? ""} />

@@ -16,7 +16,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   const related = await getRelatedProducts(slug);
   const savings = product.regularPrice - product.transferPrice;
-  const totalStock = product.variants.length === 0 ? 1 : product.variants.reduce((acc, item) => acc + item.stock, 0);
+  const totalStock = product.stock;
   const visualTags = [product.line === "JOYERIA" ? "Joyeria religiosa" : "Imagen religiosa", ...(product.tags ?? [])].slice(0, 3);
 
   return (

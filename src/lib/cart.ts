@@ -106,8 +106,12 @@ export async function getCartDetail(): Promise<{ items: CartDetailedItem[]; coun
     const variant = line.variantId ? product.variants.find((entry) => entry.id === line.variantId) : product.variants.find((entry) => entry.isDefault);
     const regularPrice = variant?.regularPrice ?? product.regularPrice;
     const transferPrice = variant?.transferPrice ?? product.transferPrice;
-    const availableStock = variant?.stock ?? 99;
-    const quantity = Math.min(line.quantity, Math.max(availableStock, 1));
+    const availableStock = variant?.stock ?? product.baseStock;
+    const quantity = Math.min(line.quantity, Math.max(availableStock, 0));
+
+    if (quantity <= 0) {
+      return [];
+    }
 
     return [{
       productId: product.id,

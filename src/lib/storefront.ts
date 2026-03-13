@@ -50,6 +50,7 @@ function fallbackImages(product: ProductRecord) {
 
 function mapProduct(product: ProductRecord): StoreProduct {
   const totalVariantStock = product.variants.reduce((sum, variant) => sum + variant.stock, 0);
+  const stock = product.variants.length > 0 ? totalVariantStock : product.baseStock;
 
   return {
     id: product.id,
@@ -61,6 +62,7 @@ function mapProduct(product: ProductRecord): StoreProduct {
     sku: product.sku,
     regularPrice: product.regularPrice,
     transferPrice: product.transferPrice,
+    stock,
     installmentsText: product.installmentsText ?? undefined,
     dimensions: product.dimensions ?? undefined,
     weightGrams: product.weightGrams ?? undefined,
@@ -73,7 +75,7 @@ function mapProduct(product: ProductRecord): StoreProduct {
     tags: [
       ...(product.isFeatured ? ["destacado"] : []),
       ...(product.createdAt >= new Date(Date.now() - 1000 * 60 * 60 * 24 * 45) ? ["nuevo"] : []),
-      ...(totalVariantStock === 0 && product.variants.length > 0 ? ["sin stock"] : []),
+      ...(stock === 0 ? ["sin stock"] : []),
       ...(product.transferPrice < product.regularPrice ? ["descuento transferencia"] : []),
     ],
     images: fallbackImages(product),
@@ -199,7 +201,7 @@ export async function filterProducts(params: {
     where.OR = [
       ...(where.OR ?? []),
       { variants: { some: { stock: { gt: 0 } } } },
-      { variants: { none: {} } },
+      { AND: [{ variants: { none: {} } }, { baseStock: { gt: 0 } }] },
     ];
   }
 

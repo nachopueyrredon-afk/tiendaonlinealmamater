@@ -5,15 +5,12 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
+import { getAdminSessionSecret } from "@/lib/security-env";
 
 const ADMIN_COOKIE = "almamater-admin-session";
 
-function getSessionSecret() {
-  return process.env.NEXTAUTH_SECRET || "change-me";
-}
-
 function sign(value: string) {
-  return crypto.createHmac("sha256", getSessionSecret()).update(value).digest("hex");
+  return crypto.createHmac("sha256", getAdminSessionSecret()).update(value).digest("hex");
 }
 
 function createSessionValue(adminId: string, email: string) {

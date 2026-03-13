@@ -19,6 +19,8 @@ export function AddToCartForm({ product }: { product: StoreProduct }) {
 
   const activeRegularPrice = selectedVariant?.regularPrice ?? product.regularPrice;
   const activeTransferPrice = selectedVariant?.transferPrice ?? product.transferPrice;
+  const availableStock = selectedVariant?.stock ?? product.stock;
+  const isOutOfStock = availableStock <= 0;
 
   return (
     <form action={addToCartAction} className="mt-8 space-y-5">
@@ -45,10 +47,11 @@ export function AddToCartForm({ product }: { product: StoreProduct }) {
             name="quantity"
             type="number"
             min={1}
-            max={10}
+            max={Math.max(1, Math.min(10, availableStock))}
             value={quantity}
             onChange={(event) => setQuantity(Number(event.target.value) || 1)}
             className="w-full rounded-[1.1rem] border border-brand-900/12 bg-white px-4 py-3 text-sm outline-none ring-brand-700/30 focus:ring-2"
+            disabled={isOutOfStock}
           />
         </label>
         <div className="rounded-[1.4rem] border border-brand-900/10 bg-paper px-5 py-5 shadow-soft">
@@ -61,11 +64,14 @@ export function AddToCartForm({ product }: { product: StoreProduct }) {
             <span className="text-sm text-brand-900/65">Transferencia</span>
             <span className="font-serif text-2xl text-brand-900">{formatCurrency(activeTransferPrice)}</span>
           </div>
+          <div className="mt-3 text-sm text-brand-900/65">
+            {isOutOfStock ? "Sin stock disponible" : `${availableStock} unidades disponibles`}
+          </div>
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Button type="submit">Aniadir al carrito</Button>
+        <Button type="submit" disabled={isOutOfStock}>{isOutOfStock ? "Sin stock" : "Aniadir al carrito"}</Button>
         <Button type="button" className="bg-transparent text-brand-900 ring-1 ring-brand-900/15 hover:bg-brand-900/5">
           Consultar por WhatsApp
         </Button>

@@ -1,12 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ActionFeedback } from "@/components/admin/action-feedback";
 import { getAdminCategories, getAdminProductById } from "@/lib/admin";
 
 import { ProductForm } from "../product-form";
 
-export default async function AdminEditProductPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function AdminEditProductPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ feedback?: string }>;
+}) {
   const { id } = await params;
+  const filters = await searchParams;
   const [product, categories] = await Promise.all([getAdminProductById(id), getAdminCategories()]);
 
   if (!product) {
@@ -22,6 +30,7 @@ export default async function AdminEditProductPage({ params }: { params: Promise
         </div>
         <Link href="/admin/productos" className="text-sm text-brand-700">Volver al listado</Link>
       </div>
+      <ActionFeedback feedback={filters.feedback} />
       <ProductForm product={product} categories={categories} />
     </section>
   );

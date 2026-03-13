@@ -37,6 +37,7 @@ cp .env.example .env
 Campos principales:
 
 - `DATABASE_URL`
+- `DIRECT_URL`
 - `NEXTAUTH_URL`
 - `NEXTAUTH_SECRET`
 - `ADMIN_EMAIL`
@@ -63,6 +64,12 @@ Credenciales admin seed por defecto:
 - password: `change-me`
 
 Conviene cambiarlas en `./.env` antes de produccion y volver a correr `npm run prisma:seed`.
+
+Importante:
+
+- `DIRECT_URL` tambien debe estar configurada porque Prisma la usa en `prisma/schema.prisma`.
+- No conviene dejar `NEXTAUTH_SECRET` ni `ADMIN_PASSWORD` con valores por defecto fuera de desarrollo local.
+- En runtime productivo, la sesion admin y el seed ya rechazan secretos o passwords default (`change-me`).
 
 ## Publicacion en GitHub
 

@@ -31,5 +31,5 @@ export async function saveSitePageAction(formData: FormData) {
 
   revalidatePath(`/${slug}`);
   revalidatePath("/admin/contenido");
-  redirect("/admin/contenido");
+  redirect("/admin/contenido?feedback=site-page-saved");
 }

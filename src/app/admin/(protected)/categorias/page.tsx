@@ -1,7 +1,13 @@
-import { createCategoryAction } from "@/app/admin/(protected)/productos/actions";
+import { createCategoryAction, updateCategoryAction } from "@/app/admin/(protected)/productos/actions";
+import { ActionFeedback } from "@/components/admin/action-feedback";
 import { getAdminCategories } from "@/lib/admin";
 
-export default async function AdminCategoriesPage() {
+export default async function AdminCategoriesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ feedback?: string }>;
+}) {
+  const params = await searchParams;
   const categories = await getAdminCategories();
 
   return (
@@ -10,6 +16,7 @@ export default async function AdminCategoriesPage() {
         <p className="text-xs uppercase tracking-[0.32em] text-brand-700">Admin / Categorias</p>
         <h1 className="mt-4 text-5xl font-semibold tracking-[-0.05em] text-brand-900">Gestion de categorias</h1>
       </div>
+      <ActionFeedback feedback={params.feedback} />
 
       <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
         <form action={createCategoryAction} className="rounded-[1.75rem] border border-brand-900/10 bg-paper p-6 shadow-soft">
@@ -29,11 +36,23 @@ export default async function AdminCategoriesPage() {
           <h2 className="text-2xl font-semibold tracking-[-0.04em] text-brand-900">Categorias actuales</h2>
           <div className="mt-5 grid gap-3">
             {categories.map((category) => (
-              <article key={category.id} className="rounded-[1rem] border border-brand-900/10 bg-white px-4 py-4">
-                <p className="font-medium text-brand-900">{category.name}</p>
-                <p className="mt-1 text-sm text-brand-900/58">/{category.slug}</p>
-                {category.description ? <p className="mt-2 text-sm leading-6 text-brand-900/68">{category.description}</p> : null}
-              </article>
+              <form key={category.id} action={updateCategoryAction} className="rounded-[1rem] border border-brand-900/10 bg-white px-4 py-4">
+                <input type="hidden" name="categoryId" value={category.id} />
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_auto] md:items-end">
+                  <label>
+                    <span className="mb-2 block text-sm text-brand-900/75">Nombre</span>
+                    <input name="name" defaultValue={category.name} className="w-full rounded-[0.9rem] border border-brand-900/12 bg-white px-3 py-2 text-sm outline-none ring-brand-700/30 focus:ring-2" required />
+                  </label>
+                  <label>
+                    <span className="mb-2 block text-sm text-brand-900/75">Descripcion</span>
+                    <input name="description" defaultValue={category.description ?? ""} className="w-full rounded-[0.9rem] border border-brand-900/12 bg-white px-3 py-2 text-sm outline-none ring-brand-700/30 focus:ring-2" />
+                  </label>
+                  <button type="submit" className="inline-flex items-center justify-center rounded-full bg-brand-900 px-4 py-2 text-sm font-medium tracking-[0.08em] text-white transition hover:bg-brand-700">
+                    Guardar
+                  </button>
+                </div>
+                <p className="mt-3 text-sm text-brand-900/58">/{category.slug}</p>
+              </form>
             ))}
           </div>
         </div>

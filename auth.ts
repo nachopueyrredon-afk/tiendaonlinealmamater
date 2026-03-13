@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
+import { getNextAuthSecret } from "@/lib/security-env";
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -11,6 +12,7 @@ const credentialsSchema = z.object({
 });
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  secret: getNextAuthSecret(),
   session: { strategy: "jwt" },
   pages: {
     signIn: "/admin/login",

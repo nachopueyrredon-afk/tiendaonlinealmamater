@@ -9,6 +9,10 @@ import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 
+function buildRedirectPath(pathname: string, feedback: string) {
+  return `${pathname}?feedback=${feedback}`;
+}
+
 function slugify(value: string) {
   return value
     .normalize("NFD")
@@ -110,6 +114,7 @@ export async function saveProductAction(formData: FormData) {
   const status = String(formData.get("status") || "DRAFT") as ProductStatus;
   const regularPrice = Number(formData.get("regularPrice") || 0);
   const transferPrice = Number(formData.get("transferPrice") || 0);
+  const baseStock = Math.max(0, Number(formData.get("baseStock") || 0));
   const subtitle = String(formData.get("subtitle") || "").trim() || null;
   const installmentsText = String(formData.get("installmentsText") || "").trim() || null;
   const dimensions = String(formData.get("dimensions") || "").trim() || null;
@@ -132,6 +137,7 @@ export async function saveProductAction(formData: FormData) {
     sku: uniqueSku,
     regularPrice,
     transferPrice,
+    baseStock,
     installmentsText,
     dimensions,
     weightGrams,
@@ -160,7 +166,7 @@ export async function saveProductAction(formData: FormData) {
   }
 
   revalidateProductPaths(product.slug);
-  redirect("/admin/productos");
+  redirect(buildRedirectPath("/admin/productos", "product-saved"));
 }
 
 export async function setProductStatusAction(formData: FormData) {
@@ -178,7 +184,7 @@ export async function setProductStatusAction(formData: FormData) {
   });
 
   revalidateProductPaths(product.slug);
-  redirect("/admin/productos");
+  redirect(buildRedirectPath("/admin/productos", "product-status-updated"));
 }
 
 export async function duplicateProductAction(formData: FormData) {
@@ -192,6 +198,10 @@ export async function duplicateProductAction(formData: FormData) {
     where: { id: productId },
     include: {
       categories: true,
+      collections: true,
+      materials: true,
+      devotions: true,
+      attributes: true,
       images: { orderBy: { sortOrder: "asc" } },
       variants: { orderBy: { sortOrder: "asc" } },
     },
@@ -215,6 +225,7 @@ export async function duplicateProductAction(formData: FormData) {
       sku: duplicateSku,
       regularPrice: source.regularPrice,
       transferPrice: source.transferPrice,
+      baseStock: source.baseStock,
       compareAtPrice: source.compareAtPrice,
       installmentsText: source.installmentsText,
       dimensions: source.dimensions,
@@ -226,6 +237,21 @@ export async function duplicateProductAction(formData: FormData) {
       inventoryPolicy: source.inventoryPolicy,
       categories: {
         create: source.categories.map((entry) => ({ categoryId: entry.categoryId })),
+      },
+      collections: {
+        create: source.collections.map((entry) => ({ collectionId: entry.collectionId })),
+      },
+      materials: {
+        create: source.materials.map((entry) => ({ materialId: entry.materialId })),
+      },
+      devotions: {
+        create: source.devotions.map((entry) => ({ devotionId: entry.devotionId })),
+      },
+      attributes: {
+        create: source.attributes.map((attribute) => ({
+          definitionId: attribute.definitionId,
+          value: attribute.value,
+        })),
       },
       images: {
         create: source.images.map((image) => ({
@@ -255,7 +281,7 @@ export async function duplicateProductAction(formData: FormData) {
   });
 
   revalidateProductPaths(duplicated.slug);
-  redirect(`/admin/productos/${duplicated.id}`);
+  redirect(`/admin/productos/${duplicated.id}?feedback=product-duplicated`);
 }
 
 export async function updateOrderAction(formData: FormData) {
@@ -287,7 +313,7 @@ export async function updateOrderAction(formData: FormData) {
   }
 
   revalidatePath("/admin/pedidos");
-  redirect("/admin/pedidos");
+  redirect(buildRedirectPath("/admin/pedidos", "order-updated"));
 }
 
 export async function createCategoryAction(formData: FormData) {
@@ -308,5 +334,36 @@ export async function createCategoryAction(formData: FormData) {
 
   revalidatePath("/admin/productos");
   revalidatePath("/admin/categorias");
-  redirect("/admin/categorias");
+  redirect(buildRedirectPath("/admin/categorias", "category-created"));
+}
+
+export async function updateCategoryAction(formData: FormData) {
+  const categoryId = String(formData.get("categoryId") || "");
+  const name = String(formData.get("name") || "").trim();
+  const description = String(formData.get("description") || "").trim() || null;
+
+  if (!categoryId || !name) {
+    throw new Error("Categoria y nombre son obligatorios.");
+  }
+
+  const current = await prisma.category.findUnique({ where: { id: categoryId } });
+
+  if (!current) {
+    throw new Error("No se encontro la categoria a editar.");
+  }
+
+  const nextSlug = current.name === name ? current.slug : slugify(name);
+
+  await prisma.category.update({
+    where: { id: categoryId },
+    data: {
+      name,
+      slug: nextSlug,
+      description,
+    },
+  });
+
+  revalidatePath("/admin/productos");
+  revalidatePath("/admin/categorias");
+  redirect(buildRedirectPath("/admin/categorias", "category-updated"));
 }

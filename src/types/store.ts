@@ -32,6 +32,7 @@ export type StoreProduct = {
   sku: string;
   regularPrice: Money;
   transferPrice: Money;
+  stock: number;
   installmentsText?: string;
   dimensions?: string;
   weightGrams?: number;
